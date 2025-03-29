@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+set -e
+
+enable_ftrace() {
+  cat /dev/null > /sys/kernel/debug/tracing/trace
+  echo $1 > /sys/kernel/debug/tracing/current_tracer
+  echo $2 > /sys/kernel/debug/tracing/set_ftrace_pid
+  #echo <some_tracee_function_if_any> > /sys/kernel/debug/tracing/set_graph_function
+  echo 1 > /sys/kernel/debug/tracing/tracing_on
+  echo >&2 "$1 tracer enabled"
+  if [[ $2 != $$ ]]; then
+    echo >&2 "tracee: PID $2"
+  fi
+}
+
+disable_ftrace() {
+  cp -f /sys/kernel/debug/tracing/trace trace.txt
+  echo > /sys/kernel/debug/tracing/set_ftrace_pid
+  echo 0 > /sys/kernel/debug/tracing/tracing_on
+  #echo > /sys/kernel/debug/tracing/set_graph_function
+  echo nop > /sys/kernel/debug/tracing/current_tracer
+  cat /dev/null > /sys/kernel/debug/tracing/trace
+  echo >&2 "Tracer disabled, check trace.txt file."
+}
+
+usage() {
+  echo >&2 "Usage: `basename $0` start [-g|--graph] [PROGRAM|PID]"
+  echo >&2 "Usage: `basename $0` stop"
+  exit 2
+}
+
+if [[ $1 == "start" ]]; then  
+  shift
+
+  TRACER="function"
+  if [[ $1 == "-g" || $1 == "--graph" ]]; then
+    TRACER="function_graph"
+    shift
+  fi
+
+  PID=$$
+  if [[ $1 =~ [1-9][0-9]* ]]; then
+    PID=$1
+    shift
+  fi
+
+  enable_ftrace $TRACER $PID
+
+  if [[ $# -gt 0 ]]; then
+    echo >&2 "tracee: $@"
+    exec $@
+  fi
+elif [[ $1 == "stop" ]]; then
+  disable_ftrace
+else
+  usage
+fi
+
+
