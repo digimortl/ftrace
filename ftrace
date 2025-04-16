@@ -25,7 +25,7 @@ disable_ftrace() {
 }
 
 usage() {
-  echo >&2 "Usage: `basename $0` start [-g|--graph] [PROGRAM|PID]"
+  echo >&2 "Usage: `basename $0` start [-g|--graph] { PROGRAM|PID }"
   echo >&2 "Usage: `basename $0` stop"
   exit 2
 }
