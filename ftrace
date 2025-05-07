@@ -15,11 +15,11 @@ enable_ftrace() {
 }
 
 disable_ftrace() {
-  cp -f /sys/kernel/debug/tracing/trace trace.txt
-  echo > /sys/kernel/debug/tracing/set_ftrace_pid
   echo 0 > /sys/kernel/debug/tracing/tracing_on
+  echo > /sys/kernel/debug/tracing/set_ftrace_pid
   #echo > /sys/kernel/debug/tracing/set_graph_function
   echo nop > /sys/kernel/debug/tracing/current_tracer
+  cp -f /sys/kernel/debug/tracing/trace trace.txt
   cat /dev/null > /sys/kernel/debug/tracing/trace
   echo >&2 "Tracer disabled, check trace.txt file."
 }
