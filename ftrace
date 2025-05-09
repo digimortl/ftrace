@@ -4,9 +4,10 @@ set -e
 
 enable_ftrace() {
   cat /dev/null > /sys/kernel/debug/tracing/trace
+  echo > /sys/kernel/debug/tracing/set_graph_function
+  #echo <some_tracee_function_if_any> > /sys/kernel/debug/tracing/set_graph_function
   echo $1 > /sys/kernel/debug/tracing/current_tracer
   echo $2 > /sys/kernel/debug/tracing/set_ftrace_pid
-  #echo <some_tracee_function_if_any> > /sys/kernel/debug/tracing/set_graph_function
   echo 1 > /sys/kernel/debug/tracing/tracing_on
   echo >&2 "$1 tracer enabled"
   if [[ $2 != $$ ]]; then
@@ -17,7 +18,7 @@ enable_ftrace() {
 disable_ftrace() {
   echo 0 > /sys/kernel/debug/tracing/tracing_on
   echo > /sys/kernel/debug/tracing/set_ftrace_pid
-  #echo > /sys/kernel/debug/tracing/set_graph_function
+  echo > /sys/kernel/debug/tracing/set_graph_function
   echo nop > /sys/kernel/debug/tracing/current_tracer
   cp -f /sys/kernel/debug/tracing/trace trace.txt
   cat /dev/null > /sys/kernel/debug/tracing/trace
