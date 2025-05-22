@@ -2,32 +2,31 @@
 
 set -e
 
+tracefs="/sys/kernel/tracing"
+
 enable_ftrace() {
-  cat /dev/null > /sys/kernel/debug/tracing/trace
-  echo > /sys/kernel/debug/tracing/set_graph_function
-  #echo <some_tracee_function_if_any> > /sys/kernel/debug/tracing/set_graph_function
-  echo $1 > /sys/kernel/debug/tracing/current_tracer
-  echo $2 > /sys/kernel/debug/tracing/set_ftrace_pid
-  echo 1 > /sys/kernel/debug/tracing/tracing_on
-  echo >&2 "$1 tracer enabled"
-  if [[ $2 != $$ ]]; then
-    echo >&2 "tracee: PID $2"
-  fi
+  cat /dev/null > $tracefs/trace
+  echo nop > $tracefs/current_tracer
+  echo 0 > $tracefs/tracing_on
+  echo $2 > $tracefs/set_ftrace_pid
+  echo $1 > $tracefs/current_tracer
+  #echo <some_tracee_function_if_any> > /$tracef/sset_graph_function
+  echo 1 > $tracefs/tracing_on
 }
 
 disable_ftrace() {
-  echo 0 > /sys/kernel/debug/tracing/tracing_on
-  cp -f /sys/kernel/debug/tracing/trace trace.txt
-  echo > /sys/kernel/debug/tracing/set_ftrace_pid
-  echo > /sys/kernel/debug/tracing/set_graph_function
-  echo nop > /sys/kernel/debug/tracing/current_tracer
-  cat /dev/null > /sys/kernel/debug/tracing/trace
+  echo 0 > $tracefs/tracing_on
+  cp -f $tracefs/trace trace.txt
+  echo > $tracefs/set_ftrace_pid
+  echo > $tracefs/set_graph_function
+  echo nop > $tracefs/current_tracer
+  cat /dev/null > $tracefs/trace
   echo >&2 "Tracer disabled, check trace.txt file."
 }
 
 usage() {
-  echo >&2 "Usage: `basename $0` start [-g|--graph] { PROGRAM|PID }"
-  echo >&2 "Usage: `basename $0` stop"
+  echo >&2 "Usage: $(basename $0) start [-g|--graph] { PROGRAM|PID }"
+  echo >&2 "Usage: $(basename $0) stop"
   exit 2
 }
 
@@ -43,6 +42,7 @@ if [[ $1 == "start" ]]; then
   PID=$$
   if [[ $1 =~ ^[1-9][0-9]*$ ]]; then
     PID=$1
+    echo >&2 "tracee: PID $PID"
     shift
   fi
 
