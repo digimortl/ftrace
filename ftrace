@@ -17,10 +17,10 @@ enable_ftrace() {
 
 disable_ftrace() {
   echo 0 > /sys/kernel/debug/tracing/tracing_on
+  cp -f /sys/kernel/debug/tracing/trace trace.txt
   echo > /sys/kernel/debug/tracing/set_ftrace_pid
   echo > /sys/kernel/debug/tracing/set_graph_function
   echo nop > /sys/kernel/debug/tracing/current_tracer
-  cp -f /sys/kernel/debug/tracing/trace trace.txt
   cat /dev/null > /sys/kernel/debug/tracing/trace
   echo >&2 "Tracer disabled, check trace.txt file."
 }
@@ -41,7 +41,7 @@ if [[ $1 == "start" ]]; then
   fi
 
   PID=$$
-  if [[ $1 =~ [1-9][0-9]* ]]; then
+  if [[ $1 =~ ^[1-9][0-9]*$ ]]; then
     PID=$1
     shift
   fi
@@ -50,7 +50,7 @@ if [[ $1 == "start" ]]; then
 
   if [[ $# -gt 0 ]]; then
     echo >&2 "tracee: $@"
-    exec $@
+    exec "$@"
   fi
 elif [[ $1 == "stop" ]]; then
   disable_ftrace
